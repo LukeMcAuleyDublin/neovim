@@ -7,6 +7,24 @@ local lspconfig = require "lspconfig"
 local servers = { "html", "cssls" }
 local util = require "lspconfig/util"
 
+local sorbet_on_attach = function(client, bufnr)
+  local function buf_set_option(...)
+    vim.api.nvim_buf_set_option(bufnr, ...)
+  end
+  buf_set_option("omnifunc", "v:lua.vim.lsp.omnifunc")
+
+  local opts = { noremap = true, silent = true }
+    if not vim.keymap.get("n", "gd", { buffer = bufnr }) then
+        vim.keymap.set("n", "gd", vim.lsp.buf.definition, opts)
+    end
+    if not vim.keymap.get("n", "gD", { buffer = bufnr }) then
+        vim.keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
+    end
+    if not vim.keymap.get("n", "K", { buffer = bufnr }) then
+        vim.keymap.set("n", "K", vim.lsp.buf.hover, opts)
+    end
+end
+
 -- lsps with default config
 for _, lsp in ipairs(servers) do
   lspconfig[lsp].setup {
@@ -65,7 +83,7 @@ lspconfig.gopls.setup {
 -- Ruby/sorbet config
 lspconfig.sorbet.setup {
   capabilities = capabilities,
-  on_attach = vim.lsp.buf.attach,
+  on_attach = on_attach,
   -- cmd = { "bundle", "exec", "srb", "tc", "--lsp" }, -- Uses bundler to execute sorbet
   -- Alternatively, if you have sorbet installed globally:
   -- cmd = { "srb", "tc", "--lsp" },
